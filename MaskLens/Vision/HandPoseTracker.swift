@@ -40,7 +40,10 @@ final class HandPoseTracker: ObservableObject {
     private let visionQueue = DispatchQueue(label: "com.masklens.vision", qos: .userInitiated)
     private var isProcessing = false
 
-    private static let jointMap: [(VNHumanHandPoseObservation.JointName, HandJoint)] = [
+    // `nonisolated`: read by the `nonisolated` `snapshot(from:timestamp:)`
+    // below, which runs off the main actor on `visionQueue`. It's a fixed
+    // lookup table with no mutable state, so isolation buys nothing here.
+    private nonisolated static let jointMap: [(VNHumanHandPoseObservation.JointName, HandJoint)] = [
         (.wrist, .wrist),
         (.thumbTip, .thumbTip), (.thumbIP, .thumbIP),
         (.indexTip, .indexTip), (.indexPIP, .indexPIP), (.indexMCP, .indexMCP),
@@ -80,6 +83,15 @@ final class HandPoseTracker: ObservableObject {
         isProcessing = true
 
         let timestamp = Date().timeIntervalSince1970
+
+        // CVPixelBuffer predates Swift concurrency and isn't marked
+        // Sendable, but Core Video buffers are safe to hand off to another
+        // thread as long as nothing mutates them concurrently — which
+        // nothing here does, this closure only reads it. `nonisolated(unsafe)`
+        // documents that we've verified that rather than silencing a
+        // warning blindly.
+        nonisolated(unsafe) let pixelBuffer = pixelBuffer
+
         visionQueue.async { [weak self] in
             guard let self else { return }
             let request = VNDetectHumanHandPoseRequest()
@@ -113,7 +125,12 @@ final class HandPoseTracker: ObservableObject {
         }
     }
 
-    private static func snapshot(from observation: VNHumanHandPoseObservation, timestamp: TimeInterval) -> HandSnapshot? {
+    // `nonisolated`: this is pure computation over its arguments (no actor
+    // state touched) and is called from `visionQueue`'s background closure
+    // — without this, it inherits `@MainActor` isolation from the
+    // enclosing class and calling it from that background queue without a
+    // hop becomes a compile error.
+    private nonisolated static func snapshot(from observation: VNHumanHandPoseObservation, timestamp: TimeInterval) -> HandSnapshot? {
         var points: [HandJoint: CGPoint] = [:]
         var confidences: [HandJoint: Float] = [:]
 

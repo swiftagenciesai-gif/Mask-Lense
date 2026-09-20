@@ -25,8 +25,13 @@ final class AppSettings: ObservableObject {
 
     /// Bonjour service types the two boards advertise. See
     /// Firmware/README.md — the sketches there advertise exactly these.
-    static let cameraServiceType = "_masklens-cam._tcp"
-    static let displayServiceType = "_masklens-disp._tcp"
+    /// `nonisolated` because these are referenced from `MaskDiscovery`,
+    /// which isn't `@MainActor` — without it, the compiler treats them as
+    /// isolated just because the enclosing class is (a static member of an
+    /// `@MainActor` type inherits that isolation by default even when, as
+    /// here, it holds no actor-protected state at all).
+    nonisolated static let cameraServiceType = "_masklens-cam._tcp"
+    nonisolated static let displayServiceType = "_masklens-disp._tcp"
 
     /// Manual IP fallback, for the (common) case where mDNS discovery is
     /// flaky on a given router. Persisted in UserDefaults since it's not

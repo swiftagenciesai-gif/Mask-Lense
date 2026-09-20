@@ -42,7 +42,7 @@ struct Stage4AIView: View {
                 }
             }
 
-            Section("Voice Assistant") {
+            Section {
                 Text(voiceStateText).foregroundStyle(.secondary)
                 if !voiceAssistant.transcript.isEmpty {
                     Text("\"\(voiceAssistant.transcript)\"").italic()
@@ -57,6 +57,8 @@ struct Stage4AIView: View {
                     Label(voiceAssistant.state == .listening ? "Stop & Ask" : "Hold to Ask (tap to start/stop)", systemImage: voiceAssistant.state == .listening ? "stop.circle.fill" : "mic.circle")
                 }
                 .disabled(!settings.hasAPIKey)
+            } header: {
+                Text("Voice Assistant")
             } footer: {
                 Text("Push-to-talk by design — see VoiceAssistantController.swift for why an always-listening wake word is a much bigger battery/privacy cost than it looks like at first.")
             }
