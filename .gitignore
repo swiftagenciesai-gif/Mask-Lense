@@ -1,0 +1,17 @@
+# Xcode / build products
+.build/
+DerivedData/
+*.xcodeproj
+!default.xcodeproj
+xcuserdata/
+*.xcuserstate
+*.xcworkspace
+Pods/
+
+# Secrets — never commit an API key
+Config/Secrets.xcconfig
+*.env
+.env
+
+# macOS
+.DS_Store

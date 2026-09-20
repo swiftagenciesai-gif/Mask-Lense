@@ -1,0 +1,57 @@
+name: MaskLens
+options:
+  bundleIdPrefix: com.masklens
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "1"
+targets:
+  MaskLens:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: MaskLens
+    info:
+      path: MaskLens/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIRequiredDeviceCapabilities: [arm64]
+        NSMicrophoneUsageDescription: "MaskLens listens for your spoken questions so it can send them to the voice assistant."
+        NSSpeechRecognitionUsageDescription: "MaskLens transcribes your speech on-device before sending the text to Claude."
+        NSLocalNetworkUsageDescription: "MaskLens talks to your mask's two ESP32 boards (camera + display) over your local WiFi network. It never leaves your LAN except for the optional Claude API calls you trigger yourself."
+        NSBonjourServices:
+          - _masklens-cam._tcp
+          - _masklens-disp._tcp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.masklens.app
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+  MaskLensTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: MaskLensTests
+    dependencies:
+      - target: MaskLens
+schemes:
+  MaskLens:
+    build:
+      targets:
+        MaskLens: all
+        MaskLensTests: [test]
+    test:
+      targets:
+        - MaskLensTests
+    run:
+      config: Debug
